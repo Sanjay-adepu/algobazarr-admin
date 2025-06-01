@@ -51,25 +51,29 @@ const ProductList = () => {
   };
 
   const handleEditSubmit = async (e) => {
-    e.preventDefault();
-    const form = new FormData();
+  e.preventDefault();
+  const form = new FormData();
 
-    Object.keys(formData).forEach((key) => {
-      form.append(key, formData[key]);
-    });
+  Object.keys(formData).forEach((key) => {
+    form.append(key, formData[key]);
+  });
 
-    if (image) form.append("image", image);
+  // Include your custom id explicitly
+  form.append("id", editingProduct.id);
 
-    try {
-      const res = await axios.put(`https://algotronn-backend.vercel.app/product/${editingProduct._id}`, form);
-      const updated = res.data.product;
-      setProducts(products.map((p) => (p._id === updated._id ? updated : p)));
-      setEditingProduct(null);
-    } catch (error) {
-      console.error("Error updating product:", error);
-      alert("Failed to update product.");
-    }
-  };
+  if (image) form.append("image", image);
+
+  try {
+    const res = await axios.put(`https://algotronn-backend.vercel.app/product/${editingProduct.id}`, form);
+    const updated = res.data.product;
+    setProducts(products.map((p) => (p.id === updated.id ? updated : p)));
+    setEditingProduct(null);
+  } catch (error) {
+    console.error("Error updating product:", error);
+    alert("Failed to update product.");
+  }
+};
+
 
   useEffect(() => {
     fetchProducts();
