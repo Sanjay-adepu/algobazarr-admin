@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-
 const ProductList = () => {
   const [products, setProducts] = useState([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
