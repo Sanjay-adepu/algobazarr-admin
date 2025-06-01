@@ -1,0 +1,153 @@
+/* Navbar Layout */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #0d0d0d;
+  color: white;
+  padding: 16px 32px;
+  font-size: 18px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar-brand {
+  font-size: 22px;
+  font-weight: bold;
+  color: white;
+  text-decoration: none;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 32px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-links li {
+  cursor: pointer;
+  color: white;
+  transition: color 0.2s ease;
+}
+
+.navbar-links li:hover,
+.navbar-links a:hover {
+  color: #00bfff;
+}
+
+/* Menu Icon */
+.menu-icon {
+  width: 30px;
+  height: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.menu-icon span {
+  height: 3px;
+  background-color: white;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.menu-icon.open span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+.menu-icon.open span:nth-child(2) {
+  opacity: 0;
+}
+.menu-icon.open span:nth-child(3) {
+  transform: rotate(-45deg) translate(6px, -6px);
+}
+
+/* Sidebar - from left */
+.sidebar-left {
+  position: fixed;
+  top: 0;
+  left: -300px;
+  width: 250px;
+  height: 100%;
+  background-color: #f8f9fa;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.25);
+  padding: 60px 20px;
+  transition: left 0.3s ease;
+  z-index: 999;
+}
+
+.sidebar-left.show {
+  left: 0;
+}
+
+.sidebar-left ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar-left li {
+  margin-bottom: 20px;
+  font-size: 17px;
+  color: #333;
+  transition: color 0.2s ease;
+}
+
+.sidebar-left li:hover {
+  color: #007bff;
+}
+
+.sidebar-left a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Dropdown for desktop */
+.dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 160px;
+  background-color: white;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  z-index: 1000;
+}
+
+.dropdown-menu li {
+  padding: 10px;
+  font-size: 15px;
+  color: #333;
+  transition: background 0.2s ease;
+}
+
+.dropdown-menu li:hover {
+  background-color: #f0f0f0;
+}
+
+.dropdown-menu a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Submenu for mobile */
+.mobile-submenu {
+  list-style: none;
+  padding-left: 20px;
+}
+
+.mobile-submenu li {
+  padding: 6px 0;
+  font-size: 16px;
+}
+#text{
+  text-decoration: none;
+  color: white;
+}
