@@ -5,8 +5,8 @@ import Navbar from "./Navbar.jsx";
 const ProductList = () => {
   const [products, setProducts] = useState([]);
   const [deletingId, setDeletingId] = useState(null);
+  const [imageFiles, setImageFiles] = useState({});
   const [uploadingId, setUploadingId] = useState(null);
-  const [imageFiles, setImageFiles] = useState({}); // Track selected image files per product
 
   const fetchProducts = async () => {
     try {
@@ -14,6 +14,7 @@ const ProductList = () => {
       setProducts(res.data.products || []);
     } catch (error) {
       console.error("Error fetching products:", error);
+      alert("Failed to fetch products.");
     }
   };
 
@@ -22,42 +23,49 @@ const ProductList = () => {
     try {
       setDeletingId(id);
       await axios.delete(`https://algotronn-backend.vercel.app/product/${id}`);
-      setProducts(products.filter((product) => product._id !== id));
+      setProducts((prev) => prev.filter((product) => product._id !== id));
+      alert("Product deleted successfully.");
     } catch (error) {
-      console.error("Error deleting product:", error);
+      console.error("Error deleting product:", error.response?.data || error.message);
       alert("Failed to delete product.");
     } finally {
       setDeletingId(null);
     }
   };
 
-  const handleImageChange = (productId, file) => {
-    setImageFiles({ ...imageFiles, [productId]: file });
+  const handleFileChange = (e, id) => {
+    setImageFiles((prev) => ({ ...prev, [id]: e.target.files[0] }));
   };
 
   const handleImageUpload = async (product) => {
     const file = imageFiles[product.id];
-    if (!file) return alert("Please select an image to upload.");
+
+    if (!file || !(file instanceof File)) {
+      alert("Please select a valid image file before uploading.");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("image", file);
 
     try {
       setUploadingId(product.id);
+
       const res = await axios.put(
         `https://algotronn-backend.vercel.app/product/${product.id}/image`,
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        formData
       );
 
       const updatedProduct = res.data.product;
+
       setProducts((prev) =>
         prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
       );
+
       alert("Image updated successfully!");
     } catch (error) {
-      console.error("Error updating image:", error);
-      alert("Failed to update image.");
+      console.error("Error updating image:", error.response?.data || error.message);
+      alert(`Failed to update image. Reason: ${error.response?.data?.message || error.message}`);
     } finally {
       setUploadingId(null);
     }
@@ -70,6 +78,7 @@ const ProductList = () => {
   return (
     <>
       <Navbar />
+
       <div className="product-list-container" style={styles.container}>
         <h2 style={styles.heading}>Product List</h2>
         {products.length === 0 ? (
@@ -78,15 +87,12 @@ const ProductList = () => {
           <ul style={styles.list}>
             {products.map((product) => (
               <li key={product._id} style={styles.card}>
-                <img
-                  src={product.imageUrl}
-                  alt={product.name}
-                  style={styles.image}
-                />
+                <img src={product.imageUrl} alt={product.name} style={styles.image} />
                 <div style={styles.details}>
                   <h3>{product.name}</h3>
                   <p>{product.description}</p>
                   <p><strong>Type:</strong> {product.type}</p>
+
                   {product.type === "duplicate" && (
                     <>
                       <p><strong>Price:</strong> ₹{product.price}</p>
@@ -94,6 +100,7 @@ const ProductList = () => {
                       <p><strong>Discount:</strong> {product.discount}%</p>
                     </>
                   )}
+
                   {product.type === "public" && (
                     <>
                       <p><strong>Summary:</strong> {product.summary}</p>
@@ -102,17 +109,16 @@ const ProductList = () => {
                     </>
                   )}
 
-                  {/* Image Upload Section */}
-                  <div>
+                  <div style={{ marginTop: "10px" }}>
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => handleImageChange(product.id, e.target.files[0])}
+                      onChange={(e) => handleFileChange(e, product.id)}
                     />
                     <button
                       onClick={() => handleImageUpload(product)}
-                      style={styles.uploadButton}
                       disabled={uploadingId === product.id}
+                      style={{ ...styles.uploadButton, marginLeft: "10px" }}
                     >
                       {uploadingId === product.id ? "Uploading..." : "Update Image"}
                     </button>
@@ -178,14 +184,12 @@ const styles = {
     marginTop: "10px"
   },
   uploadButton: {
-    padding: "8px 16px",
-    backgroundColor: "#1890ff",
+    padding: "6px 12px",
+    backgroundColor: "#007bff",
     color: "#fff",
     border: "none",
     borderRadius: "5px",
-    cursor: "pointer",
-    marginTop: "10px",
-    marginRight: "10px"
+    cursor: "pointer"
   }
 };
 
