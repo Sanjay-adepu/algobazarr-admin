@@ -5,96 +5,76 @@ import Navbar from "./Navbar.jsx";
 const ProductList = () => {
   const [products, setProducts] = useState([]);
   const [deletingId, setDeletingId] = useState(null);
-  const [imageFiles, setImageFiles] = useState({});
   const [uploadingId, setUploadingId] = useState(null);
+  const [editProduct, setEditProduct] = useState(null);
+  const [editImage, setEditImage] = useState(null);
+  const [form, setForm] = useState({}); // stores form field values
 
   const fetchProducts = async () => {
     try {
       const res = await axios.get("https://algotronn-backend.vercel.app/products");
       setProducts(res.data.products || []);
     } catch (error) {
-      console.error("Error fetching products:", error);
       alert("Failed to fetch products.");
     }
   };
 
   const deleteProduct = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this product?")) return;
+    if (!window.confirm("Delete this product?")) return;
     try {
       setDeletingId(id);
       await axios.delete(`https://algotronn-backend.vercel.app/product/${id}`);
-      setProducts((prev) => prev.filter((product) => product._id !== id));
-      alert("Product deleted successfully.");
+      setProducts((prev) => prev.filter((p) => p._id !== id));
+      alert("Product deleted.");
     } catch (error) {
-      console.error("Error deleting product:", error.response?.data || error.message);
-      alert("Failed to delete product.");
+      alert("Failed to delete.");
     } finally {
       setDeletingId(null);
     }
   };
 
-  const handleFileChange = (e, id) => {
-    setImageFiles((prev) => ({ ...prev, [id]: e.target.files[0] }));
+  const openEditForm = (product) => {
+    setEditProduct(product);
+    setForm(product); // preload form with existing data
+    setEditImage(null); // reset
   };
 
-  const handleImageUpload = async (product) => {
-  alert(`Starting image upload for product ID: ${product?.id}`);
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
 
-  const file = imageFiles[product.id];
+  const handleEditImageChange = (e) => {
+    setEditImage(e.target.files[0]);
+  };
 
-  if (!file) {
-    alert("No file selected.");
-    return;
-  }
+  const handleEditSubmit = async () => {
+    if (!editProduct) return;
+    const formData = new FormData();
 
-  if (!(file instanceof File)) {
-    alert("The selected file is not a valid File object.");
-    return;
-  }
+    Object.entries(form).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
 
-  alert(`File selected: ${file.name}, type: ${file.type}`);
+    if (editImage) {
+      formData.append("image", editImage);
+    }
 
-  const formData = new FormData();
-  formData.append("image", file);
+    try {
+      const res = await axios.put(
+        `https://algotronn-backend.vercel.app/product/${editProduct.id}`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
 
-  try {
-    alert("Preparing to send PUT request...");
-    setUploadingId(product.id);
-
-    const res = await axios.put(
-      `https://algotronn-backend.vercel.app/product/${product.id}/image`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        }
-      }
-    );
-
-    alert("PUT request successful!");
-
-    const updatedProduct = res.data.product;
-
-    setProducts((prev) =>
-      prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
-    );
-
-    alert("Image updated successfully and product state updated.");
-  } catch (error) {
-    console.error("Error updating image:", error);
-    alert(
-      `Failed to update image.\nStatus: ${error?.response?.status || "N/A"}\nMessage: ${
-        error?.response?.data?.message || error.message
-      }`
-    );
-  } finally {
-    setUploadingId(null);
-    alert("Upload process finished.");
-  }
-};
-
-
-
+      const updated = res.data.product;
+      setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+      alert("Product updated!");
+      setEditProduct(null); // close modal
+    } catch (error) {
+      alert("Update failed: " + (error.response?.data?.message || error.message));
+    }
+  };
 
   useEffect(() => {
     fetchProducts();
@@ -103,63 +83,74 @@ const ProductList = () => {
   return (
     <>
       <Navbar />
+      <div style={styles.container}>
+        <h2>Product List</h2>
 
-      <div className="product-list-container" style={styles.container}>
-        <h2 style={styles.heading}>Product List</h2>
-        {products.length === 0 ? (
-          <p>Loading....</p>
-        ) : (
-          <ul style={styles.list}>
-            {products.map((product) => (
-              <li key={product._id} style={styles.card}>
-                <img src={product.imageUrl} alt={product.name} style={styles.image} />
-                <div style={styles.details}>
-                  <h3>{product.name}</h3>
-                  <p>{product.description}</p>
-                  <p><strong>Type:</strong> {product.type}</p>
+        {products.map((product) => (
+          <div key={product._id} style={styles.card}>
+            <img src={product.imageUrl} alt={product.name} style={styles.image} />
+            <div style={styles.details}>
+              <h3>{product.name}</h3>
+              <p>{product.description}</p>
+              <p>Type: {product.type}</p>
 
-                  {product.type === "duplicate" && (
-                    <>
-                      <p><strong>Price:</strong> ₹{product.price}</p>
-                      <p><strong>Original Price:</strong> ₹{product.originalPrice}</p>
-                      <p><strong>Discount:</strong> {product.discount}%</p>
-                    </>
-                  )}
+              {product.type === "duplicate" && (
+                <>
+                  <p>Price: ₹{product.price}</p>
+                  <p>Original Price: ₹{product.originalPrice}</p>
+                  <p>Discount: {product.discount}%</p>
+                </>
+              )}
 
-                  {product.type === "public" && (
-                    <>
-                      <p><strong>Summary:</strong> {product.summary}</p>
-                      <p><strong>Daily P&L:</strong> {product.dailyPL}</p>
-                      <p><strong>Public Type:</strong> {product.publicType}</p>
-                    </>
-                  )}
+              <button onClick={() => openEditForm(product)} style={styles.editButton}>Edit</button>
+              <button onClick={() => deleteProduct(product._id)} style={styles.deleteButton}>
+                {deletingId === product._id ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        ))}
 
-                  <div style={{ marginTop: "10px" }}>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileChange(e, product.id)}
-                    />
-                    <button
-                      onClick={() => handleImageUpload(product)}
-                      disabled={uploadingId === product.id}
-                      style={{ ...styles.uploadButton, marginLeft: "10px" }}
-                    >
-                      {uploadingId === product.id ? "Uploading..." : "Update Image"}
-                    </button>
-                  </div>
+        {/* ✅ Edit Popup */}
+        {editProduct && (
+          <div style={styles.modalOverlay}>
+            <div style={styles.modal}>
+              <h3>Edit Product</h3>
 
-                  <button
-                    style={styles.deleteButton}
-                    onClick={() => deleteProduct(product._id)}
-                    disabled={deletingId === product._id}
-                  >
-                    {deletingId === product._id ? "Deleting..." : "Delete"}
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+              <input name="name" value={form.name || ""} onChange={handleEditInputChange} placeholder="Name" />
+              <input name="description" value={form.description || ""} onChange={handleEditInputChange} placeholder="Description" />
+              <input name="type" value={form.type || ""} onChange={handleEditInputChange} placeholder="Type" />
+              <input name="summary" value={form.summary || ""} onChange={handleEditInputChange} placeholder="Summary" />
+              <input name="dailyPL" value={form.dailyPL || ""} onChange={handleEditInputChange} placeholder="Daily P&L" />
+              <input name="publicType" value={form.publicType || ""} onChange={handleEditInputChange} placeholder="Public Type" />
+              <input name="price" value={form.price || ""} onChange={handleEditInputChange} placeholder="Price" />
+              <input name="originalPrice" value={form.originalPrice || ""} onChange={handleEditInputChange} placeholder="Original Price" />
+              <input name="discount" value={form.discount || ""} onChange={handleEditInputChange} placeholder="Discount" />
+              <input name="tradetronLink" value={form.tradetronLink || ""} onChange={handleEditInputChange} placeholder="Tradetron Link" />
+              <input name="sorttype" value={form.sorttype || ""} onChange={handleEditInputChange} placeholder="Sort Type" />
+
+              <label>
+                Stock:
+                <input
+                  type="checkbox"
+                  checked={form.stock === true || form.stock === "true"}
+                  onChange={(e) => setForm((prev) => ({ ...prev, stock: e.target.checked }))}
+                />
+              </label>
+
+              <label>
+                Is Priced:
+                <input
+                  type="checkbox"
+                  checked={form.isPriced === true || form.isPriced === "true"}
+                  onChange={(e) => setForm((prev) => ({ ...prev, isPriced: e.target.checked }))}
+                />
+              </label>
+
+              <input type="file" accept="image/*" onChange={handleEditImageChange} />
+              <button onClick={handleEditSubmit}>Save</button>
+              <button onClick={() => setEditProduct(null)}>Cancel</button>
+            </div>
+          </div>
         )}
       </div>
     </>
@@ -167,54 +158,19 @@ const ProductList = () => {
 };
 
 const styles = {
-  container: {
-    padding: "20px",
-    fontFamily: "Arial, sans-serif",
-    maxWidth: "1000px",
-    margin: "auto"
+  container: { padding: "20px", maxWidth: "1000px", margin: "auto" },
+  card: { display: "flex", border: "1px solid #ccc", padding: "10px", marginBottom: "10px" },
+  image: { width: "120px", height: "120px", objectFit: "cover", borderRadius: "8px" },
+  details: { marginLeft: "20px", flex: 1 },
+  deleteButton: { backgroundColor: "#ff4d4f", color: "#fff", border: "none", padding: "6px 12px", marginTop: "10px" },
+  editButton: { backgroundColor: "#007bff", color: "#fff", border: "none", padding: "6px 12px", marginTop: "10px", marginRight: "10px" },
+  modalOverlay: {
+    position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", display: "flex", justifyContent: "center", alignItems: "center"
   },
-  heading: {
-    textAlign: "center",
-    marginBottom: "20px"
-  },
-  list: {
-    listStyle: "none",
-    padding: 0
-  },
-  card: {
-    display: "flex",
-    gap: "20px",
-    alignItems: "center",
-    border: "1px solid #ddd",
-    borderRadius: "10px",
-    padding: "15px",
-    marginBottom: "15px"
-  },
-  image: {
-    width: "150px",
-    height: "150px",
-    objectFit: "cover",
-    borderRadius: "10px"
-  },
-  details: {
-    flex: 1
-  },
-  deleteButton: {
-    padding: "8px 16px",
-    backgroundColor: "#ff4d4f",
-    color: "#fff",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer",
-    marginTop: "10px"
-  },
-  uploadButton: {
-    padding: "6px 12px",
-    backgroundColor: "#007bff",
-    color: "#fff",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer"
+  modal: {
+    backgroundColor: "#fff", padding: "20px", borderRadius: "10px",
+    width: "90%", maxWidth: "500px", display: "flex", flexDirection: "column", gap: "10px"
   }
 };
 
