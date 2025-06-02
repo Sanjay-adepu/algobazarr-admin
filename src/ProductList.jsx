@@ -6,6 +6,7 @@ const ProductList = () => {
   const [products, setProducts] = useState([]);
   const [deletingId, setDeletingId] = useState(null);
   const [uploadingId, setUploadingId] = useState(null);
+  const [imageFiles, setImageFiles] = useState({}); // Track selected image files per product
 
   const fetchProducts = async () => {
     try {
@@ -30,20 +31,33 @@ const ProductList = () => {
     }
   };
 
-  const handleImageUpload = async (e, productId) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const handleImageChange = (productId, file) => {
+    setImageFiles({ ...imageFiles, [productId]: file });
+  };
+
+  const handleImageUpload = async (product) => {
+    const file = imageFiles[product.id];
+    if (!file) return alert("Please select an image to upload.");
 
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append("image", file);
 
     try {
-      setUploadingId(productId);
-      const res = await axios.put(`https://algotronn-backend.vercel.app/product/${productId}/image`, formData);
-      setProducts(products.map(p => p._id === productId ? res.data.product : p));
-    } catch (err) {
-      console.error("Failed to upload image:", err);
-      alert("Image upload failed");
+      setUploadingId(product.id);
+      const res = await axios.put(
+        `https://algotronn-backend.vercel.app/product/${product.id}/image`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+      const updatedProduct = res.data.product;
+      setProducts((prev) =>
+        prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
+      );
+      alert("Image updated successfully!");
+    } catch (error) {
+      console.error("Error updating image:", error);
+      alert("Failed to update image.");
     } finally {
       setUploadingId(null);
     }
@@ -64,12 +78,15 @@ const ProductList = () => {
           <ul style={styles.list}>
             {products.map((product) => (
               <li key={product._id} style={styles.card}>
-                <img src={product.imageUrl} alt={product.name} style={styles.image} />
+                <img
+                  src={product.imageUrl}
+                  alt={product.name}
+                  style={styles.image}
+                />
                 <div style={styles.details}>
                   <h3>{product.name}</h3>
                   <p>{product.description}</p>
                   <p><strong>Type:</strong> {product.type}</p>
-
                   {product.type === "duplicate" && (
                     <>
                       <p><strong>Price:</strong> ₹{product.price}</p>
@@ -77,7 +94,6 @@ const ProductList = () => {
                       <p><strong>Discount:</strong> {product.discount}%</p>
                     </>
                   )}
-
                   {product.type === "public" && (
                     <>
                       <p><strong>Summary:</strong> {product.summary}</p>
@@ -86,13 +102,21 @@ const ProductList = () => {
                     </>
                   )}
 
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleImageUpload(e, product._id)}
-                    style={{ marginTop: "10px" }}
-                  />
-                  <p>{uploadingId === product._id ? "Uploading image..." : ""}</p>
+                  {/* Image Upload Section */}
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageChange(product.id, e.target.files[0])}
+                    />
+                    <button
+                      onClick={() => handleImageUpload(product)}
+                      style={styles.uploadButton}
+                      disabled={uploadingId === product.id}
+                    >
+                      {uploadingId === product.id ? "Uploading..." : "Update Image"}
+                    </button>
+                  </div>
 
                   <button
                     style={styles.deleteButton}
@@ -150,7 +174,18 @@ const styles = {
     color: "#fff",
     border: "none",
     borderRadius: "5px",
-    cursor: "pointer"
+    cursor: "pointer",
+    marginTop: "10px"
+  },
+  uploadButton: {
+    padding: "8px 16px",
+    backgroundColor: "#1890ff",
+    color: "#fff",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+    marginTop: "10px",
+    marginRight: "10px"
   }
 };
 
