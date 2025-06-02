@@ -38,38 +38,63 @@ const ProductList = () => {
   };
 
   const handleImageUpload = async (product) => {
-    const file = imageFiles[product.id];
+  alert(`Starting image upload for product ID: ${product?.id}`);
 
-    if (!file || !(file instanceof File)) {
-      alert("Please select a valid image file before uploading.");
-      return;
-    }
+  const file = imageFiles[product.id];
 
-    const formData = new FormData();
-    formData.append("image", file);
+  if (!file) {
+    alert("No file selected.");
+    return;
+  }
 
-    try {
-      setUploadingId(product.id);
+  if (!(file instanceof File)) {
+    alert("The selected file is not a valid File object.");
+    return;
+  }
 
-      const res = await axios.put(
-        `https://algotronn-backend.vercel.app/product/${product.id}/image`,
-        formData
-      );
+  alert(`File selected: ${file.name}, type: ${file.type}`);
 
-      const updatedProduct = res.data.product;
+  const formData = new FormData();
+  formData.append("image", file);
 
-      setProducts((prev) =>
-        prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
-      );
+  try {
+    alert("Preparing to send PUT request...");
+    setUploadingId(product.id);
 
-      alert("Image updated successfully!");
-    } catch (error) {
-      console.error("Error updating image:", error.response?.data || error.message);
-      alert(`Failed to update image. Reason: ${error.response?.data?.message || error.message}`);
-    } finally {
-      setUploadingId(null);
-    }
-  };
+    const res = await axios.put(
+      `https://algotronn-backend.vercel.app/product/${product.id}/image`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        }
+      }
+    );
+
+    alert("PUT request successful!");
+
+    const updatedProduct = res.data.product;
+
+    setProducts((prev) =>
+      prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
+    );
+
+    alert("Image updated successfully and product state updated.");
+  } catch (error) {
+    console.error("Error updating image:", error);
+    alert(
+      `Failed to update image.\nStatus: ${error?.response?.status || "N/A"}\nMessage: ${
+        error?.response?.data?.message || error.message
+      }`
+    );
+  } finally {
+    setUploadingId(null);
+    alert("Upload process finished.");
+  }
+};
+
+
+
 
   useEffect(() => {
     fetchProducts();
