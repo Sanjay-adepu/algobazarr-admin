@@ -91,7 +91,7 @@ const ProductList = () => {
             <img src={product.imageUrl} alt={product.name} style={styles.image} />
             <div style={styles.details}>
               <h3>{product.name}</h3>
-              <p>{product.description}</p>
+              <p>{product.summary}</p>
               <p>Type: {product.type}</p>
 
               {product.type === "duplicate" && (
