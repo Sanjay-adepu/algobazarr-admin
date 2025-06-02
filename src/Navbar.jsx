@@ -53,7 +53,9 @@ export default function Navbar() {
             </li>
             <li><Link id="text" to="/order">Orders</Link></li>
             <li><Link id="text" to="/users">Users</Link></li>
+ <li><Link id="text" to="/">Logout</Link></li>
           </ul>
+
         )}
       </nav>
 
@@ -69,6 +71,7 @@ export default function Navbar() {
               <ul className="mobile-submenu">
                 <li><Link to="/add-product">Add Product</Link></li>
                 <li><Link to="/products">Product List</Link></li>
+ <li><Link id="text" to="/">Logout</Link></li>
               </ul>
             )}
           </ul>
