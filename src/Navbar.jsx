@@ -48,11 +48,13 @@ export default function Navbar() {
                 <ul className="dropdown-menu">
                   <li><Link to="/add-product">Add Product</Link></li>
                   <li><Link to="/products">Product List</Link></li>
+
                 </ul>
               )}
             </li>
             <li><Link id="text" to="/order">Orders</Link></li>
             <li><Link id="text" to="/users">Users</Link></li>
+
  <li><Link id="text" to="/">Logout</Link></li>
           </ul>
 
@@ -62,6 +64,7 @@ export default function Navbar() {
       {isMobile && (
         <div className={`sidebar-left ${isOpen ? 'show' : ''}`}>
           <ul>
+ <li><Link id="text" to="/">Logout</Link></li>
             <li><Link to="/order">Orders</Link></li>
             <li><Link to="/users">Users</Link></li>
             <li onClick={toggleMobileProducts}>
