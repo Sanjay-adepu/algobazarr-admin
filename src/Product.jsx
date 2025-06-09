@@ -120,9 +120,9 @@ const AddProduct = () => {
 <label>Sort Type</label>
 <select name="sorttype" onChange={handleChange} value={formData.sorttype} required>
   <option value="">-- Select Sort Type --</option>
-  <option value="buying">Buying</option>
-  <option value="selling">Selling</option>
-<option value="collaborate">Collaborate</option>
+  <option value="buying">Buying strategies</option>
+  <option value="selling">Selling strategies</option>
+<option value="collaborate">Collaborated strategies</option>
 </select>
 
         <label>Image</label>
