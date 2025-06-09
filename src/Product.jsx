@@ -122,6 +122,7 @@ const AddProduct = () => {
   <option value="">-- Select Sort Type --</option>
   <option value="buying">Buying</option>
   <option value="selling">Selling</option>
+<option value="collaborate">Collaborate</option>
 </select>
 
         <label>Image</label>
